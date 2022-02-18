@@ -72,6 +72,8 @@
         <input id="input" autocomplete="off" /><button>Send</button>
     </form>
 
+    <h1 id="time">Socket Example</h1>
+
 
     <script src="./dist/socket.io.min.js.map"></script>
     <script src="./dist/socket.io.js"></script>
@@ -80,8 +82,8 @@
         var messages = document.getElementById('messages');
         var form = document.getElementById('form');
         var input = document.getElementById('input');
-
-        var socket = io('http://localhost:3000');
+        var count = 0;
+        var socket = io('https://socketbacked1.herokuapp.com/');
         socket.on('connect', function () {
             console.log('connect');
         });
@@ -90,30 +92,37 @@
             console.log('disconnect', msg);
         });
 
-        function getRandomString(length) {
-            var randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            var result = '';
-            for (var i = 0; i < length; i++) {
-                result += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
-            }
-            return result;
-        }
+
+
+
 
         setInterval(() => {
-            const messageString = getRandomString(20)
-            socket.emit('pingMessage', messageString);
-        }, 1000);
+            if (socket.connected) {
+                const messageString = socket.id + ': ' + count;
+                count += 1;
 
+                socket.emit('pingMessage', messageString);
+            }
+
+        }, 5000);
+
+        setInterval(() => {
+            if (socket.connected) {
+                 document.getElementById('time').innerHTML = new Date().toLocaleTimeString();
+                var element = document.getElementById("time")
+                console.log("item", element);
+                socket.emit("DOMEvent", {
+                    value: element.innerHTML,
+                    type: "time",
+                    target: element.outerHTML,
+                });
+            }
+        }, 1000)
 
 
         socket.on("pingMessage", (msg) => {
             var item = document.createElement('li');
             item.textContent = msg;
-            console.log("item", item);
-            socket.emit("DOMEvent", {
-                type: "domEvent",
-                target: item
-            });
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })
