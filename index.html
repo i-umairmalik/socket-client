@@ -27,7 +27,7 @@
         }
 
         #input {
-            border: none;
+            /* border: none; */
             padding: 0 1rem;
             flex-grow: 1;
             border-radius: 2rem;
@@ -66,82 +66,108 @@
 </head>
 
 <body>
-
-    <ul id="messages"></ul>
-    <form id="form" action="">
-        <input id="input" autocomplete="off" /><button>Send</button>
+    <form id="setName" action="">
+        <input id="input" /> <button>Set Name</button>
     </form>
-
     <h1 id="time">Socket Example</h1>
+    <ul id="messages"></ul>
+    <!-- <form id="form" action="">
+        <input id="input" autocomplete="off" /><button>Send</button>
+    </form> -->
+
+
 
 
     <script src="./dist/socket.io.min.js.map"></script>
     <script src="./dist/socket.io.js"></script>
     <script>
 
+        var setName = document.getElementById("setName");
+
         var messages = document.getElementById('messages');
         var form = document.getElementById('form');
         var input = document.getElementById('input');
         var count = 0;
         var socket = io('https://socketbacked1.herokuapp.com/');
+        // var socket = io('http://localhost:3000');
+
         socket.on('connect', function () {
-            console.log('connect');
+            console.log('connected with server with user' + name);
         });
 
         socket.on('disconnect', (msg) => {
-            console.log('disconnect', msg);
+            console.log('disconnect with server with user', name, msg);
         });
 
-
-
-
-
-        setInterval(() => {
-            if (socket.connected) {
-                const messageString = socket.id + ': ' + count;
-                count += 1;
-
-                socket.emit('pingMessage', messageString);
-            }
-
-        }, 5000);
-
-        setInterval(() => {
-            if (socket.connected) {
-                 document.getElementById('time').innerHTML = new Date().toLocaleTimeString();
-                var element = document.getElementById("time")
-                console.log("item", element);
-                socket.emit("DOMEvent", {
-                    value: element.innerHTML,
-                    type: "time",
-                    target: element.outerHTML,
-                });
-            }
-        }, 1000)
-
-
-        socket.on("pingMessage", (msg) => {
-            var item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        })
-
-
-        form.addEventListener('submit', function (e) {
+        setName.addEventListener("submit", function (e) {
             e.preventDefault();
+            console.log("iam clicked", input.value)
             if (input.value) {
-                socket.emit('chat message', input.value);
-                input.value = '';
+                callSocket(input.value);
+                console.log("name", input.value)
             }
+
         });
 
-        socket.on('chat message', function (msg) {
-            var item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        });
+        function callSocket(name) {
+
+            if (name) {
+
+                console.log("name", name, socket.connected)
+
+                setInterval(() => {
+                    if (socket.connected) {
+                        const messageString = socket.id + ': ' + count;
+                        console.log('messageString: ', messageString);
+                        count += 1;
+                        socket.emit('pingMessage', name + " " + messageString);
+                    }
+
+                }, 5000);
+
+                setInterval(() => {
+                    if (socket.connected) {
+                        document.getElementById('time').innerHTML = new Date().toLocaleTimeString();
+                        var element = document.getElementById("time")
+                        console.log("item", element);
+                        socket.emit("DOMEvent", {
+                            // value: element.innerHTML,
+                            // type: "time",
+                            user: name,
+                            target: element.outerHTML,
+                        });
+                    }
+                }, 1000)
+
+
+                socket.on("pingMessage", (msg) => {
+                    var item = document.createElement('li');
+                    item.textContent = msg + " " + name;
+                    messages.appendChild(item);
+                    window.scrollTo(0, document.body.scrollHeight);
+                })
+
+
+                // form.addEventListener('submit', function (e) {
+                //     e.preventDefault();
+                //     if (input.value) {
+                //         socket.emit('chat message', input.value);
+                //         input.value = '';
+                //     }
+                // });
+
+                // socket.on('chat message', function (msg) {
+                //     var item = document.createElement('li');
+                //     item.textContent = msg;
+                //     messages.appendChild(item);
+                //     window.scrollTo(0, document.body.scrollHeight);
+                // });
+            }
+
+        }
+
+
+
 
 
     </script>
